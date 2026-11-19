@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MINNER AI — Your Cute AI Companion</title>
+<style>
+:root{--pink:#ff76bd;--purple:#9b83ff;--ink:#251c3a;--muted:#786d8e}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:system-ui,Segoe UI,sans-serif;color:var(--ink);background:radial-gradient(circle at 15% 10%,#ffe0f2,transparent 35%),radial-gradient(circle at 90% 20%,#e7ddff,transparent 38%),#faf7ff}
+.app{max-width:1050px;margin:auto;padding:22px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{font-weight:900;font-size:1.4rem;letter-spacing:.5px}.brand span{color:#df55a6}.tag{color:var(--muted);font-size:.9rem}
+.layout{display:grid;grid-template-columns: minmax(260px, .85fr) 1.15fr;gap:18px;margin-top:22px}
+.panel{background:#ffffffd9;border:1px solid #fff;border-radius:26px;padding:20px;box-shadow:0 12px 40px #7355a51a}
+.avatar-wrap{display:flex;flex-direction:column;align-items:center;text-align:center}
+.avatar{width:min(100%,320px);aspect-ratio:1;border-radius:28px;background:linear-gradient(145deg,#ffd7ec,#dcd3ff);display:grid;place-items:center;position:relative;overflow:hidden;border:4px solid white}
+.girl{font-size:140px;filter:drop-shadow(0 8px 6px #9b65a955);animation:float 3s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-8px)}}
+.avatar.talking .girl{animation:talk .22s infinite alternate}
+@keyframes talk{to{transform:translateY(-3px) scale(1.025)}}
+.spark{position:absolute;font-size:25px;animation:twinkle 2s infinite alternate}
+.s1{top:16%;left:13%}.s2{top:20%;right:13%}.s3{bottom:17%;right:17%}
+@keyframes twinkle{to{opacity:.35;transform:scale(.8)}}
+.status{margin:14px 0 4px;font-weight:700}.sub{color:var(--muted);font-size:.9rem}
+.chat{display:flex;flex-direction:column;min-height:570px}.messages{flex:1;overflow:auto;max-height:440px;padding:4px}
+.msg{padding:11px 14px;border-radius:17px;margin:9px 0;max-width:88%;line-height:1.45;white-space:pre-wrap}
+.bot{background:#f2eaff;border-bottom-left-radius:5px}.user{background:#ffe5f2;margin-left:auto;border-bottom-right-radius:5px}
+.controls{display:flex;gap:8px;margin-top:12px}.controls input{flex:1;min-width:0;border:1px solid #e5dcef;border-radius:15px;padding:13px;font:inherit;outline:none}
+button{border:0;border-radius:14px;padding:12px 15px;background:linear-gradient(120deg,var(--pink),var(--purple));color:white;font-weight:750;cursor:pointer}
+button.secondary{background:#f0eafa;color:#51446d}button:disabled{opacity:.5;cursor:not-allowed}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.note{font-size:.78rem;color:var(--muted);line-height:1.5;margin-top:14px}
+@media(max-width:720px){.layout{grid-template-columns:1fr}.chat{min-height:500px}.messages{max-height:360px}.app{padding:14px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top"><div><div class="brand">🎀 <span>MINNER</span> AI</div><div class="tag">Cute • Smart • Friendly</div></div><button class="secondary" id="clearBtn">Clear chat</button></header>
+  <main class="layout">
+    <section class="panel avatar-wrap">
+      <div class="avatar" id="avatar"><span class="spark s1">✦</span><span class="spark s2">♡</span><span class="spark s3">✧</span><div class="girl" aria-label="Cute anime avatar">👩🏻‍🎤</div></div>
+      <div class="status" id="status">Hi! Main MINNER AI hoon 💗</div>
+      <div class="sub">Tum mujhse Hindi ya Hinglish mein baat kar sakte ho.</div>
+      <div class="tools"><button id="voiceBtn">🎙️ Speak</button><button class="secondary" id="stopBtn">■ Stop voice</button></div>
+      <p class="note">Voice input browser support par depend karta hai. Best results ke liye Chrome use karo. Abhi ye starter demo hai; real AI API abhi connect nahi hai.</p>
+    </section>
+    <section class="panel chat">
+      <h2 style="margin:0 0 8px">Chat with MINNER 💬</h2>
+      <div class="messages" id="messages" aria-live="polite"></div>
+      <form class="controls" id="chatForm"><input id="userInput" autocomplete="off" placeholder="Yahan message likho..." aria-label="Message"><button type="submit">Send</button></form>
+      <div class="tools"><button class="secondary" id="speakLast">🔊 Repeat last reply</button></div>
+    </section>
+  </main>
+</div>
+<script>
+const messagesEl=document.getElementById('messages'), input=document.getElementById('userInput');
+const avatar=document.getElementById('avatar'), statusEl=document.getElementById('status');
+let lastReply='';
+const KEY='minner_ai_demo_chat_v1';
+let history=[];
+try{history=JSON.parse(localStorage.getItem(KEY)||'[]')}catch{history=[]}
+function addMessage(text,who,save=true){
+  const div=document.createElement('div');div.className='msg '+who;div.textContent=text;messagesEl.appendChild(div);messagesEl.scrollTop=messagesEl.scrollHeight;
+  if(save){history.push({text,who});history=history.slice(-60);try{localStorage.setItem(KEY,JSON.stringify(history))}catch{}}
+}
+function renderHistory(){messagesEl.innerHTML='';history.forEach(m=>addMessage(m.text,m.who,false))}
+function makeReply(text){
+ const t=text.toLowerCase();
+ if(/^(hi|hello|hey|hii|namaste)/.test(t)) return 'Hiii! 🥰 Main MINNER AI hoon. Aaj kya baat karein?';
+ if(t.includes('naam')) return 'Mera naam MINNER AI hai! 🎀 Tum mujhe MINNER bula sakte ho.';
+ if(t.includes('kaise ho')) return 'Main bilkul ready hoon tumhari help ke liye! Tum kaise ho? 💗';
+ if(t.includes('joke')||t.includes('hasao')) return 'Ek computer thand mein kyun kaanp raha tha? Kyunki uske Windows khule the! 😂';
+ if(t.includes('time')) return 'Main abhi live clock se connected nahi hoon, apne device ka time check kar lo.';
+ if(t.includes('thank')) return 'Awww, welcome! 💕 Aur kuch help chahiye?';
+ if(t.includes('bye')) return 'Byeee! Apna khayal rakhna. Phir baat karenge! 👋';
+ return 'Achha, samajhne ki koshish kar rahi hoon! 😊 Main abhi demo mode mein hoon. Real smart answers ke liye next step mein secure AI backend connect karna hoga.';
+}
+function speak(text){
+ if(!('speechSynthesis' in window)){statusEl.textContent='Is browser mein voice output supported nahi hai.';return}
+ speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='hi-IN';u.rate=.96;u.pitch=1.18;
+ const voices=speechSynthesis.getVoices();const hindi=voices.find(v=>v.lang.toLowerCase().startsWith('hi'));if(hindi)u.voice=hindi;
+ u.onstart=()=>{avatar.classList.add('talking');statusEl.textContent='Bol rahi hoon... 💬'};
+ u.onend=()=>{avatar.classList.remove('talking');statusEl.textContent='Tumhari baari! 💗'};
+ u.onerror=()=>{avatar.classList.remove('talking');statusEl.textContent='Voice play nahi ho payi.'};
+ speechSynthesis.speak(u);
+}
+function send(text){
+ text=text.trim();if(!text)return;addMessage(text,'user');input.value='';
+ const reply=makeReply(text);lastReply=reply;addMessage(reply,'bot');speak(reply);
+}
+document.getElementById('chatForm').addEventListener('submit',e=>{e.preventDefault();send(input.value)});
+document.getElementById('speakLast').onclick=()=>lastReply&&speak(lastReply);
+document.getElementById('stopBtn').onclick=()=>{if('speechSynthesis'in window)speechSynthesis.cancel();avatar.classList.remove('talking');statusEl.textContent='Voice stopped.'};
+document.getElementById('clearBtn').onclick=()=>{history=[];localStorage.removeItem(KEY);messagesEl.innerHTML='';addMessage('Chat clear ho gayi! Nayi baat shuru karein? 💗','bot')};
+const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+document.getElementById('voiceBtn').onclick=()=>{
+ if(!SpeechRecognition){statusEl.textContent='Voice input is browser-supported nahi. Chrome try karo.';return}
+ const rec=new SpeechRecognition();rec.lang='hi-IN';rec.interimResults=false;rec.maxAlternatives=1;
+ statusEl.textContent='Sun rahi hoon... 🎧';rec.onresult=e=>send(e.results[0][0].transcript);rec.onerror=()=>statusEl.textContent='Mic error. Permission check karo.';rec.onend=()=>{if(!avatar.classList.contains('talking'))statusEl.textContent='Ready hoon! 💗'};rec.start();
+};
+renderHistory();
+if(!history.length)addMessage('Hiii! Main MINNER AI hoon! 🥰 Mujhe message bhejo ya Speak button dabao.','bot');
+</script>
+</body>
+</html>
